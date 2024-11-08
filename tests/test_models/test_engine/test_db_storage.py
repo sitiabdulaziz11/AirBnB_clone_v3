@@ -16,8 +16,10 @@ from models.state import State
 from models.user import User
 import json
 import os
+import pycodestyle
 import pep8
 import unittest
+
 DBStorage = db_storage.DBStorage
 classes = {"Amenity": Amenity, "City": City, "Place": Place,
            "Review": Review, "State": State, "User": User}
@@ -67,28 +69,50 @@ test_db_storage.py'])
             self.assertTrue(len(func[1].__doc__) >= 1,
                             "{:s} method needs a docstring".format(func[0]))
     
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_get_existing_object(self):
-        obj = SomeModel()
-        obj_id = obj.id
-        self.file_storage.new(obj)
-        retrieved_obj = self.file_storage.get(SomeModel, obj_id)
-        self.assertEqual(retrieved_obj, obj)
+        """Test get method retrieves an existing object by class and ID"""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                obj = cls()  # Create an instance of the current class
+                models.storage.new(obj)
+                models.storage.save()
+                obj_id = obj.id
+                retrieved_obj = models.storage.get(cls, obj_id)
+                self.assertEqual(retrieved_obj, obj)
+                # Clean up by deleting the object if needed
 
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_get_nonexistent_object(self):
-        obj = self.file_storage.get(SomeModel, "nonexistent_id")
-        self.assertIsNone(obj)
+        """Test get method returns None for a non-existent object"""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                obj = models.storage.get(cls, "nonexistent_id")
+                self.assertIsNone(obj)
     
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_count_all_objects(self):
-        # Assuming no objects exist in storage initially
-        count = self.file_storage.count()
-        self.assertEqual(count, 0)
+        """Test count method returns the number of all objects"""
+        initial_count = models.storage.count()
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                obj = cls()
+                models.storage.new(obj)
+                models.storage.save()
+                self.assertEqual(models.storage.count(), initial_count + 1)
+                # Increment initial_count by 1 for each class instance added
 
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_count_class_specific_objects(self):
-        # Add an object and test count by class
-        obj = SomeModel()
-        self.file_storage.new(obj)
-        count = self.file_storage.count(SomeModel)
-        self.assertEqual(count, 1)
+        """Test count method returns number of objects for specific class"""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                initial_count = models.storage.count(cls)
+                obj = cls()
+                models.storage.new(obj)
+                models.storage.save()
+                self.assertEqual(models.storage.count(cls), initial_count + 1)
+                # Clean up by deleting the object if needed
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""

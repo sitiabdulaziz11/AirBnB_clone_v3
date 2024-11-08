@@ -23,7 +23,7 @@ classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
 
 
-class TestFileStorageDocs(unittest.TestCase):
+class TestDBStorageDocs(unittest.TestCase):
     """Tests to check the documentation and style of FileStorage class"""
     @classmethod
     def setUpClass(cls):
@@ -113,3 +113,41 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+    
+    def test_get_existing_object(self):
+        """Test that get retrieves an existing object by class and ID."""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                obj = cls()  # Create an instance of the class
+                self.storage.new(obj)
+                self.storage.save()
+                obj_id = obj.id
+                retrieved_obj = self.storage.get(cls, obj_id)
+                self.assertEqual(retrieved_obj, obj)
+    
+    def test_get_nonexistent_object(self):
+        """Test get returns None for a non-existent object ID."""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                obj = self.storage.get(cls, "nonexistent_id")
+                self.assertIsNone(obj)
+    
+    def test_count_all_objects(self):
+        """Test count returns the total number of objects in FileStorage."""
+        initial_count = self.storage.count()
+        for class_name, cls in classes.items():
+            obj = cls()
+            self.storage.new(obj)
+            self.storage.save()
+            self.assertEqual(self.storage.count(), initial_count + 1)
+            initial_count += 1
+    
+    def test_count_class_specific_objects(self):
+        """Test count returns the number of objects for a specific class."""
+        for class_name, cls in classes.items():
+            with self.subTest(class_name=class_name):
+                initial_count = self.storage.count(cls)
+                obj = cls()
+                self.storage.new(obj)
+                self.storage.save()
+                self.assertEqual(self.storage.count(cls), initial_count + 1)
