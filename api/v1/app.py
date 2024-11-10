@@ -27,6 +27,12 @@ def errorhandler(e):
     """
     return jsonify({"error": "Not found"}), 404
 
+@app.errorhandler(405)
+def not_allowed_method(e):
+    """Error handler. Return JSON for 405 errors
+    """
+    return jsonify({"error": "Method not allowed"}), 405
+
 @app.teardown_appcontext
 def close_storage(exception):
     """closes the storage on teardown"""

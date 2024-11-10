@@ -2,7 +2,7 @@
 """Route for /states
 """
 
-from flask import jsonify
+from flask import jsonify, request
 
 from api.v1.views import app_views
 from models import storage
@@ -45,6 +45,9 @@ def get_states_by_id(id):
 def delete_state(id):
     """Deletes a State object.
     """
+    if not id:
+        return jsonify({"error": "To Delete State ID is required"}), 400
+    
     state = storage.get(State, id)
     if state is None:
         return jsonify({"error": "Not found"}), 404
@@ -52,3 +55,40 @@ def delete_state(id):
     storage.delete(state)
     storage.save()
     return jsonify({}), 200
+
+@app_views.route('/states', methods=['POST'], strict_slashes=False)
+def create_state():
+    """ Method to create a new state.
+    """
+    data = request.get_json()
+    
+    if data is None:
+        return jsonify({"error": "Not a JSON"}), 400
+    
+    if 'name' not in data:
+        return jsonify({"error": "Missing name"}), 400
+    
+    state = State(**data)
+    storage.new(state)
+    storage.save()
+    return jsonify(state.to_dict()), 201
+
+@app_views.route('/states/<id>', methods=['PUT'], strict_slashes=False)
+def update_state(id):
+    """ Method to update a state.
+    """
+    state = storage.get(State, id)
+    if state is None:
+        return jsonify({"error": "Not found"}), 404
+    
+    data = request.get_json()
+    if data is None:
+        return jsonify({"error": "Not a JSON"}), 400
+    
+    for key, value in data.items():
+        if key == 'id' or key == 'created_at' or key == 'updated_at':
+            continue
+        setattr(state, key, value)
+    storage.new(state)
+    storage.save()
+    return jsonify(state.to_dict()), 200
