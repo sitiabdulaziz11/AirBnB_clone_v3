@@ -32,3 +32,9 @@ class State(BaseModel, Base):
                 if city.state_id == self.id:
                     city_list.append(city)
             return city_list
+    
+    def __repr__(self):
+        return f"<State id={self.id}, name={self.name}>"
+
+    def __str__(self):
+        return self.__repr__()
