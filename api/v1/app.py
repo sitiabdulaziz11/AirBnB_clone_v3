@@ -5,10 +5,11 @@ starts a Flask web application
 
 import os
 from flask import Flask, jsonify
-
+from flask_cors import CORS
 
 from models import storage
 from api.v1.views import app_views
+
 
 host = os.getenv("HBNB_API_HOST", "0.0.0.0")
 port = os.getenv("HBNB_API_PORT", 5000)
@@ -18,6 +19,8 @@ app = Flask(__name__)
 
 
 app.register_blueprint(app_views)
+CORS(app, resources={"/*": {"origins": "0.0.0.0"}})
+# CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
 
 
 
