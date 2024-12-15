@@ -8,6 +8,7 @@ from api.v1.views import app_views
 from models import storage
 from models.place import Place
 from models.city import City
+from models.state import State
 
 
 @app_views.route('/cities/city_id/places', methods=['GET'], strict_slashes=False)
@@ -88,3 +89,63 @@ def update_place(place_id):
     storage.new(place)
     storage.save()
     return jsonify(place.to_dict()), 200
+
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+def place_search():
+    """Search or retrieve place object based on specific filters passed in the JSON body of the request.
+    """
+    try:
+        data = request.get_json()
+    except Exception:
+        return jsonify({"error": "Not a JSON"}), 400
+    
+    if not data or not any(data.values()):
+        places = storage.all(Place).value()
+        return jsonify([place.to_dict() for place in places])
+    
+    # Retrieve filters
+    states = data.get("states", [])
+    cities = data.get("cities", [])
+    amenities = data.get("amenities", [])
+    
+    # Get Place objects
+    places = []
+    if states:
+        for state_id in states:
+            state = storage.get(State, state_id)
+            if state:
+                for city in state.cities:
+                    places.extend(city.places)
+    
+    if cities:
+        for city_id in cities:
+            city = storage.get(City, city_id)
+            if city:
+                   places.extend(city.places)
+    
+    # Remove duplicates
+    # places = list(set(places))
+    
+    # Filter by amenities
+    if amenities:
+        places = [place for place in places if all(amenity.id in [a.id for a in place.amenities] for amenity in amenities)]
+    return jsonify([place.to_dict() for place in places])
+
+    
+    # filtered_places = []
+    # for place in places:
+    #     place_amenity_ids = [a.id for a in place.amenities]  # Get the IDs of all amenities in the place
+
+    #     # Check if all required amenities are in the place
+    #     has_all_amenities = True
+    #     for amenity in amenities:
+    #         if amenity.id not in place_amenity_ids:
+    #             has_all_amenities = False
+    #             break  # If one is missing, no need to check further
+
+    #     if has_all_amenities:
+    #         filtered_places.append(place)  # Add the place to the filtered list
+
+    # places = filtered_places
+
+        
