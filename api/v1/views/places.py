@@ -115,7 +115,8 @@ def place_search():
             state = storage.get(State, state_id)
             if state:
                 for city in state.cities:
-                    places.extend(city.places)
+                    places.extend(city.places)  #  Instead of appending one Place
+                    # object at a time with append(), extend() can add all Place objects in one step.
     
     if cities:
         for city_id in cities:
@@ -130,22 +131,3 @@ def place_search():
     if amenities:
         places = [place for place in places if all(amenity.id in [a.id for a in place.amenities] for amenity in amenities)]
     return jsonify([place.to_dict() for place in places])
-
-    
-    # filtered_places = []
-    # for place in places:
-    #     place_amenity_ids = [a.id for a in place.amenities]  # Get the IDs of all amenities in the place
-
-    #     # Check if all required amenities are in the place
-    #     has_all_amenities = True
-    #     for amenity in amenities:
-    #         if amenity.id not in place_amenity_ids:
-    #             has_all_amenities = False
-    #             break  # If one is missing, no need to check further
-
-    #     if has_all_amenities:
-    #         filtered_places.append(place)  # Add the place to the filtered list
-
-    # places = filtered_places
-
-        
